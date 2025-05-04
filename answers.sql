@@ -1,31 +1,45 @@
--- Question 1: Achieving 1NF
-SELECT OrderID, CustomerName, TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(Products, ',', n.n), ',', -1)) AS Product
-FROM ProductDetail
-JOIN (SELECT 1 AS n UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5) n
-  ON CHAR_LENGTH(Products) - CHAR_LENGTH(REPLACE(Products, ',', '')) >= n.n - 1
-ORDER BY OrderID, n.n;
+-- Question 1
+CREATE TABLE ProductDetail (
+    OrderID INT,
+    CustomerName VARCHAR(100),
+    Products VARCHAR(100)
+);
 
--- Question 2: Achieving 2NF
--- Step 1: Create a new Customer Table to Remove the Partial Dependency
-CREATE TABLE Customer (
+INSERT INTO ProductDetail (OrderID, CustomerName, Products)
+VALUES
+    (101, 'John Doe', 'Laptop'),
+    (101, 'John Doe', 'Mouse'),
+    (102, 'Jane Smith', 'Tablet'),
+    (102, 'Jane Smith', 'Keyboard'),
+    (102, 'Jane Smith', 'Mouse'),
+    (103, 'Emily Clark', 'Phone');
+-- Question 2
+-- Create Orders table
+CREATE TABLE Orders (
     OrderID INT PRIMARY KEY,
     CustomerName VARCHAR(100)
 );
 
--- Step 2: Create the OrderDetails Table
-CREATE TABLE OrderDetails (
+INSERT INTO Orders (OrderID, CustomerName)
+VALUES
+    (101, 'John Doe'),
+    (102, 'Jane Smith'),
+    (103, 'Emily Clark');
+
+-- Create Product table
+CREATE TABLE Product (
     OrderID INT,
     Product VARCHAR(100),
     Quantity INT,
     PRIMARY KEY (OrderID, Product),
-    FOREIGN KEY (OrderID) REFERENCES Customer(OrderID)
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID)
 );
 
--- Step 3: Populate the Customer and OrderDetails Tables
--- Insert data into Customer table
-INSERT INTO Customer (OrderID, CustomerName)
-SELECT DISTINCT OrderID, CustomerName FROM OrderDetails;
-
--- Insert data into OrderDetails table
-INSERT INTO OrderDetails (OrderID, Product, Quantity)
-SELECT OrderID, Product, Quantity FROM OriginalOrderDetails;
+INSERT INTO Product (OrderID, Product, Quantity)
+VALUES
+    (101, 'Laptop', 2),
+    (101, 'Mouse', 1),
+    (102, 'Tablet', 3),
+    (102, 'Keyboard', 1),
+    (102, 'Mouse', 2),
+    (103, 'Phone', 1);
